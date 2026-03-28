@@ -59,10 +59,16 @@ export const ApiListClient = ({ workspaceSlug }: { workspaceSlug: string }) => {
     }
   };
 
+  const isEmpty = !isLoading && apiList.length === 0 && !isSearching;
+
   return (
     <div className="flex flex-col">
-      <ApiListControls apiList={allApis} onApiListChange={setApiList} onSearch={setIsSearching} />
-      <ApiListControlCloud />
+      {!isEmpty && (
+        <>
+          <ApiListControls apiList={allApis} onApiListChange={setApiList} onSearch={setIsSearching} />
+          <ApiListControlCloud />
+        </>
+      )}
 
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3 md:gap-5 w-full p-5">
@@ -104,26 +110,31 @@ export const ApiListClient = ({ workspaceSlug }: { workspaceSlug: string }) => {
         <EmptyComponentSpacer>
           <Empty className="m-0 p-0">
             <Empty.Icon />
-            <Empty.Title>No APIs found</Empty.Title>
-            <Empty.Description>
-              {isSearching
-                ? "No APIs match your search criteria. Try a different search term."
-                : "You haven't created any APIs yet. Create one to get started."}
-            </Empty.Description>
-            {!isSearching && (
-              <Empty.Actions className="mt-4">
-                <CreateApiButton defaultOpen={isNewApi} workspaceSlug={workspaceSlug} />
+            {isSearching ? (
+              <>
+                <Empty.Title>No APIs found</Empty.Title>
+                <Empty.Description>
+                  No APIs match your search criteria. Try a different search term.
+                </Empty.Description>
+              </>
+            ) : (
+              <>
+                <Empty.Title className="text-lg">Welcome to Unkey</Empty.Title>
+                <Empty.Description className="text-sm">
+                  Create an API to start issuing and managing keys for your users.
+                </Empty.Description>
+                <Empty.Actions className="mt-4">
+                  <CreateApiButton defaultOpen={isNewApi} workspaceSlug={workspaceSlug} />
+                </Empty.Actions>
                 <a
                   href="https://www.unkey.com/docs/introduction"
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="mt-3 text-xs text-accent-9 hover:text-accent-11 transition-colors underline underline-offset-2"
                 >
-                  <Button size="md">
-                    <BookBookmark />
-                    Documentation
-                  </Button>
+                  Read the quickstart guide
                 </a>
-              </Empty.Actions>
+              </>
             )}
           </Empty>
         </EmptyComponentSpacer>
