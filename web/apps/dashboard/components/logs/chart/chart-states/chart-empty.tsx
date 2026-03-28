@@ -30,18 +30,20 @@ import type { ChartEmptyProps } from "./types";
  */
 export const ChartEmpty = ({
   variant = "simple",
-  message = "No data for timeframe",
+  message,
   labels,
   height = 50,
   className,
+  hasKeys = true,
 }: ChartEmptyProps) => {
+  const displayMessage = message ?? (hasKeys ? "No requests in this period" : "Create your first key to see traffic here");
   // Simple variant: just centered message
   if (variant === "simple") {
     return (
       <div className={cn("flex flex-col h-full bg-grayA-2", className)}>
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm text-accent-9">{message}</span>
+            <span className="text-sm text-accent-9">{displayMessage}</span>
           </div>
         </div>
       </div>
@@ -65,7 +67,7 @@ export const ChartEmpty = ({
         <div style={{ height }} className="border-b border-gray-4">
           <div className="flex-1 flex items-center justify-center h-full">
             <div className="flex flex-col items-center gap-2">
-              <span className="text-sm text-accent-9">{message}</span>
+              <span className="text-sm text-accent-9">{displayMessage}</span>
             </div>
           </div>
         </div>
@@ -105,7 +107,7 @@ export const ChartEmpty = ({
                 {labelsWithDefaults.rangeLabel}
               </div>
             </div>
-            <div className="text-accent-12 text-[18px] font-semibold leading-7">--</div>
+            <div className="text-accent-12 text-[18px] font-semibold leading-7">0</div>
           </div>
 
           {/* Right side section shown conditionally */}
@@ -120,7 +122,7 @@ export const ChartEmpty = ({
                     />
                     <div className="text-accent-10 text-[11px] leading-4">{metric.label}</div>
                   </div>
-                  <div className="text-accent-12 text-[18px] font-semibold leading-7">--</div>
+                  <div className="text-accent-12 text-[18px] font-semibold leading-7">0</div>
                 </div>
               ))}
             </div>
@@ -130,7 +132,7 @@ export const ChartEmpty = ({
         {/* Chart area with empty message */}
         <div className="flex-1 min-h-0 flex items-center justify-center">
           <div className="flex flex-col items-center gap-2">
-            <span className="text-sm text-accent-9">{message}</span>
+            <span className="text-sm text-accent-9">{displayMessage}</span>
           </div>
         </div>
 

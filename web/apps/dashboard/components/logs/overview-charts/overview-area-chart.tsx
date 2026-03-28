@@ -45,6 +45,7 @@ export interface TimeseriesAreaChartProps {
   enableSelection?: boolean;
   labels: TimeseriesChartLabels;
   granularity?: Granularity;
+  hasKeys?: boolean;
 }
 
 export const OverviewAreaChart = ({
@@ -56,6 +57,7 @@ export const OverviewAreaChart = ({
   enableSelection = false,
   labels,
   granularity,
+  hasKeys = true,
 }: TimeseriesAreaChartProps) => {
   const chartRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<Selection>({ start: "", end: "" });
@@ -218,7 +220,7 @@ export const OverviewAreaChart = ({
 
   // Show empty state when there's no data
   if (hasNoData) {
-    return <ChartEmpty variant="full" labels={labelsWithDefaults} />;
+    return <ChartEmpty variant="full" labels={labelsWithDefaults} hasKeys={hasKeys} />;
   }
 
   // Get primary metric for range display

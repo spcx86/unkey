@@ -66,4 +66,5 @@ export type ChartEmptyProps = {
   labels?: TimeseriesChartLabels;
   height?: number;
   className?: string;
+  hasKeys?: boolean;
 };

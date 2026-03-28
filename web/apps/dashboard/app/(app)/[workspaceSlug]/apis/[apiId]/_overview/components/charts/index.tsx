@@ -9,9 +9,11 @@ import { useFetchActiveKeysTimeseries } from "./line-chart/hooks/use-fetch-times
 export const KeysOverviewLogsCharts = ({
   apiId,
   onMount,
+  hasKeys = true,
 }: {
   apiId: string;
   onMount: (distanceToTop: number) => void;
+  hasKeys?: boolean;
 }) => {
   const { filters, updateFilters } = useFilters();
 
@@ -93,6 +95,7 @@ export const KeysOverviewLogsCharts = ({
           isError={verificationIsError}
           enableSelection
           onMount={onMount}
+          hasKeys={hasKeys}
           onSelectionChange={(selection) =>
             handleSelectionChange({
               ...selection,
@@ -114,6 +117,7 @@ export const KeysOverviewLogsCharts = ({
       <div className="w-full md:w-1/2 max-md:h-72">
         <OverviewAreaChart
           data={activeKeysTimeseries}
+          hasKeys={hasKeys}
           isLoading={activeKeysIsLoading}
           isError={activeKeysIsError}
           enableSelection

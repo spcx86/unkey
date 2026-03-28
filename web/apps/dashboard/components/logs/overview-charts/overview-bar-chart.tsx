@@ -45,6 +45,7 @@ type OverviewBarChartProps = {
   tooltipItems?: ChartTooltipItem[];
   onMount?: (distanceToTop: number) => void;
   granularity?: TimeseriesGranularity;
+  hasKeys?: boolean;
 };
 
 export function OverviewBarChart({
@@ -58,6 +59,7 @@ export function OverviewBarChart({
   tooltipItems = [],
   onMount,
   granularity,
+  hasKeys = true,
 }: OverviewBarChartProps) {
   const chartRef = useRef<HTMLDivElement>(null);
   const [selection, setSelection] = useState<Selection>({ start: "", end: "" });
@@ -215,7 +217,7 @@ export function OverviewBarChart({
 
   // Show empty state when there's no data
   if (totalCount === 0) {
-    return <OverviewChartEmpty labels={labels} />;
+    return <OverviewChartEmpty labels={labels} hasKeys={hasKeys} />;
   }
 
   const primaryCount = (data ?? []).reduce(
