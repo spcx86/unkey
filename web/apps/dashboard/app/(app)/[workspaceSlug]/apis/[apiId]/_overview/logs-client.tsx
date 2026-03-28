@@ -7,6 +7,7 @@ import { useCallback, useState } from "react";
 import { KeysOverviewLogsCharts } from "./components/charts";
 import { KeysOverviewLogsControlCloud } from "./components/control-cloud";
 import { KeysOverviewLogsControls } from "./components/controls";
+import { NoKeysEmptyState } from "./components/table/logs-table";
 import { KeysOverviewLogsTable } from "./components/table/logs-table";
 
 export const LogsClient = ({ apiId }: { apiId: string }) => {
@@ -25,6 +26,11 @@ export const LogsClient = ({ apiId }: { apiId: string }) => {
 
   return (
     <div className="flex flex-col">
+      {!hasKeys && (
+        <div className="px-5 border-b border-gray-4">
+          <NoKeysEmptyState apiId={apiId} />
+        </div>
+      )}
       {hasKeys && (
         <>
           <KeysOverviewLogsControls apiId={apiId} />

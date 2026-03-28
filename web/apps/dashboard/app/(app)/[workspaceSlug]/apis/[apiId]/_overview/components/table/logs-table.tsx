@@ -93,7 +93,7 @@ export const KeysOverviewLogsTable = ({ apiId, setSelectedLog, log: selectedLog,
         hide: true,
         hasMore: hasMore ?? false,
       }}
-      emptyState={!hasKeys ? <NoKeysEmptyState apiId={apiId} /> : <EmptyApiRequests />}
+      emptyState={<EmptyApiRequests />}
     />
   );
 };
@@ -258,7 +258,7 @@ fmt.Println(result.Key)`,
 
 // ── No-keys empty state component ────────────────────────────────────
 
-function NoKeysEmptyState({ apiId }: { apiId: string }) {
+export function NoKeysEmptyState({ apiId }: { apiId: string }) {
   const [activeTab, setActiveTab] = useState(0);
   const [activeFramework, setActiveFramework] = useState(0);
   const tab = CODE_TABS[activeTab];
@@ -271,7 +271,7 @@ function NoKeysEmptyState({ apiId }: { apiId: string }) {
   };
 
   return (
-    <div className="w-[600px] flex flex-col items-start gap-4 py-8">
+    <div className="w-full max-w-[720px] flex flex-col items-start gap-4 py-8">
       <div>
         <h3 className="text-accent-12 font-semibold text-[15px]">
           Start issuing API keys to your users
