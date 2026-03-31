@@ -225,16 +225,41 @@ const NavigableDialogNav = <TStepName extends string>({
 const NavigableDialogContent = <TStepName extends string>({
   items,
   className,
+  showScrollFade = false,
 }: {
   items: {
     id: TStepName;
     content: ReactNode;
   }[];
   className?: string;
+  showScrollFade?: boolean;
 }) => {
   const { activeId } = useNavigableDialog<TStepName>();
+
   return (
-    <div className="flex-1 min-w-0 overflow-y-auto">
+    <div className="flex-1 min-w-0 overflow-y-auto relative">
+      {showScrollFade && (
+        <style>{`
+          .nav-dialog-scroll {
+            overflow-y: scroll !important;
+          }
+          .nav-dialog-scroll::-webkit-scrollbar {
+            width: 6px;
+            -webkit-appearance: none;
+          }
+          .nav-dialog-scroll::-webkit-scrollbar-track {
+            background: rgba(128, 128, 128, 0.08);
+            border-radius: 3px;
+          }
+          .nav-dialog-scroll::-webkit-scrollbar-thumb {
+            background: rgba(128, 128, 128, 0.25);
+            border-radius: 3px;
+          }
+          .nav-dialog-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(128, 128, 128, 0.4);
+          }
+        `}</style>
+      )}
       <DefaultDialogContentArea className={cn("min-h-[70vh] xl:min-h-[50vh] h-full", className)}>
         <div className="h-full relative overflow-visible">
           {items.map((item) => {
@@ -243,7 +268,9 @@ const NavigableDialogContent = <TStepName extends string>({
               <div
                 key={item.id}
                 className={cn(
-                  "w-full absolute inset-0 overflow-y-auto scrollbar-hide",
+                  "w-full absolute inset-0",
+                  !showScrollFade && "overflow-y-auto scrollbar-hide",
+                  showScrollFade && "nav-dialog-scroll",
                   "transition-all duration-300 ease-out",
                   isActive
                     ? "opacity-100 translate-x-0 z-10"
