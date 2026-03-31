@@ -168,7 +168,7 @@ const CODE_TABS = [
     icon: TSIcon,
     frameworks: [
       {
-        name: "TypeScript",
+        name: "TS Create Key",
         code: (apiId: string) => `import { Unkey } from "@unkey/api";
 
 const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
@@ -182,7 +182,40 @@ const { result } = await unkey.keys.create({
 console.log(result.key);`,
       },
       {
-        name: "Next.js",
+        name: "TS Verify Key",
+        code: (_apiId: string) => `import { Unkey } from "@unkey/api";
+
+const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
+
+const { result } = await unkey.keys.verify({
+  key: "sk_live_...",
+});
+
+if (!result.valid) {
+  // reject unauthorized request
+}
+
+// handle authorized request`,
+      },
+      {
+        name: "Next.js Create",
+        code: (apiId: string) => `import { Unkey } from "@unkey/api";
+
+const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
+
+// In your API route or server action
+export async function createKeyForUser(userId: string) {
+  const { result } = await unkey.keys.create({
+    apiId: "${apiId}",
+    prefix: "sk_live",
+    externalId: userId,
+  });
+
+  return result.key;
+}`,
+      },
+      {
+        name: "Next.js Verify",
         code: (_apiId: string) => `import { withUnkey } from "@unkey/nextjs";
 
 export const POST = withUnkey(async (req) => {
@@ -195,7 +228,22 @@ export const POST = withUnkey(async (req) => {
 });`,
       },
       {
-        name: "Hono",
+        name: "Hono Create",
+        code: (apiId: string) => `import { Unkey } from "@unkey/api";
+
+const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
+
+app.post("/keys", async (c) => {
+  const { result } = await unkey.keys.create({
+    apiId: "${apiId}",
+    prefix: "sk_live",
+  });
+
+  return c.json({ key: result.key });
+});`,
+      },
+      {
+        name: "Hono Verify",
         code: (_apiId: string) => `import { Hono } from "hono";
 import { type UnkeyContext, unkey } from "@unkey/hono";
 
@@ -215,7 +263,7 @@ app.get("/protected", (c) => {
     icon: PythonIcon,
     frameworks: [
       {
-        name: "Python",
+        name: "Create Key",
         code: (apiId: string) => `from unkey import Unkey
 
 client = Unkey(bearer_auth="<YOUR_ROOT_KEY>")
@@ -228,6 +276,21 @@ result = client.keys.create_key(
 
 print(result.key)`,
       },
+      {
+        name: "Verify Key",
+        code: (_apiId: string) => `from unkey import Unkey
+
+client = Unkey(bearer_auth="<YOUR_ROOT_KEY>")
+
+result = client.keys.verify_key(
+  key="sk_live_...",
+)
+
+if result.valid:
+    print("Authorized")
+else:
+    print("Denied:", result.code)`,
+      },
     ],
   },
   {
@@ -236,7 +299,7 @@ print(result.key)`,
     icon: GoIcon,
     frameworks: [
       {
-        name: "Golang",
+        name: "Create Key",
         code: (apiId: string) => `import unkey "github.com/unkeyed/unkey-go"
 
 client := unkey.New(
@@ -251,6 +314,22 @@ result, err := client.Keys.CreateKey(ctx, &operations.CreateKeyRequestBody{
 
 fmt.Println(result.Key)`,
       },
+      {
+        name: "Verify Key",
+        code: (_apiId: string) => `import unkey "github.com/unkeyed/unkey-go"
+
+client := unkey.New(
+  unkey.WithSecurity("<YOUR_ROOT_KEY>"),
+)
+
+result, err := client.Keys.VerifyKey(ctx, &operations.VerifyKeyRequestBody{
+  Key: "sk_live_...",
+})
+
+if result.Valid {
+  fmt.Println("Authorized")
+}`,
+      },
     ],
   },
   {
@@ -259,11 +338,18 @@ fmt.Println(result.Key)`,
     icon: CurlIcon,
     frameworks: [
       {
-        name: "curl",
+        name: "Create Key",
         code: (apiId: string) => `curl -X POST https://api.unkey.com/v2/keys.createKey \\
   -H "Authorization: Bearer <YOUR_ROOT_KEY>" \\
   -H "Content-Type: application/json" \\
   -d '{"apiId": "${apiId}"}'`,
+      },
+      {
+        name: "Verify Key",
+        code: (_apiId: string) => `curl -X POST https://api.unkey.com/v2/keys.verifyKey \\
+  -H "Authorization: Bearer <YOUR_ROOT_KEY>" \\
+  -H "Content-Type: application/json" \\
+  -d '{"key": "sk_live_..."}'`,
       },
     ],
   },
@@ -296,9 +382,9 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           Use the Unkey SDK or API to create and manage keys programmatically.
         </p>
       </div>
-      <div className="w-full overflow-hidden rounded-lg border border-gray-3 dark:border-[#2a2a2a]">
-        {/* Language tabs */}
-        <div className="flex items-end gap-0 bg-[#f2f2f2] dark:bg-[#111] px-2 pt-2">
+      <div className="w-full overflow-hidden">
+        {/* Language tabs — outside the bordered container */}
+        <div className="flex items-end gap-0">
           {CODE_TABS.map((t, i) => {
             const Icon = t.icon;
             return (
@@ -308,8 +394,8 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
                 className={cn(
                   "inline-flex items-center gap-1.5 justify-center whitespace-nowrap rounded-t-lg px-3 py-1.5 text-xs font-light transition-all border border-b-0",
                   activeTab === i
-                    ? "text-gray-12 dark:text-white bg-[#f8f8f8] dark:bg-[#0a0a0a] border-gray-3 dark:border-[#2a2a2a]"
-                    : "text-gray-8 hover:text-gray-11 dark:text-white/30 dark:hover:text-white/60 bg-transparent border-transparent"
+                    ? "text-gray-12 dark:text-white bg-[#f8f8f8] dark:bg-[#0a0a0a] border-gray-3 dark:border-[#2a2a2a] font-medium"
+                    : "text-gray-11 hover:text-gray-12 dark:text-gray-11 dark:hover:text-white bg-transparent border-transparent"
                 )}
               >
                 <Icon active={activeTab === i} />
@@ -319,10 +405,10 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           })}
         </div>
         {/* Code block with optional framework sidebar */}
-        <div className="bg-[#f8f8f8] dark:bg-[#0a0a0a] flex overflow-hidden">
+        <div className="-mt-px bg-[#f8f8f8] dark:bg-[#0a0a0a] flex overflow-hidden rounded-b-lg rounded-tr-lg border border-gray-3 dark:border-[#2a2a2a]">
           {/* Framework sidebar — only show when there are multiple */}
           {frameworks.length > 1 && (
-            <div className="flex flex-col border-r border-gray-3 dark:border-[#2a2a2a] py-2 min-w-[100px]">
+            <div className="flex flex-col py-2 min-w-[100px]">
               {frameworks.map((fw, i) => (
                 <button
                   key={fw.name}
