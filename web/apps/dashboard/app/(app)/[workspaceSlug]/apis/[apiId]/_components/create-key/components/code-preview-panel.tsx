@@ -2,8 +2,7 @@
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Highlight, type PrismTheme } from "prism-react-renderer";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { createPortal } from "react-dom";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import type { FormValues } from "../create-key.schema";
 
@@ -224,9 +223,42 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
   const activeTheme = isDark ? darkTheme : lightTheme;
   const [activeLang, setActiveLang] = useState(0);
   const [copied, setCopied] = useState(false);
+  const [justUpdated, setJustUpdated] = useState(false);
 
   const lang = LANGUAGES[activeLang];
   const code = lang.generate(values as Partial<FormValues>, apiId);
+
+  // Detect code changes for update feedback
+  const prevCodeRef = useRef(code);
+  const isFirstRender = useRef(true);
+  useEffect(() => {
+    if (isFirstRender.current) {
+      isFirstRender.current = false;
+      return;
+    }
+    if (prevCodeRef.current !== code) {
+      prevCodeRef.current = code;
+      setJustUpdated(true);
+      const timer = setTimeout(() => setJustUpdated(false), 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [code]);
+
+  // Count configured fields
+  const fieldCount = useMemo(() => {
+    let count = 0;
+    const v = values as Partial<FormValues>;
+    if (v.name) count++;
+    if (v.prefix) count++;
+    if (v.bytes && v.bytes !== 16) count++;
+    if (v.externalId) count++;
+    if (v.environment) count++;
+    if (hasCredits(v)) count++;
+    if (hasRatelimit(v)) count++;
+    if (hasExpiration(v)) count++;
+    if (hasMeta(v)) count++;
+    return count;
+  }, [values]);
 
   const handleCopy = useCallback(() => {
     navigator.clipboard.writeText(code);
@@ -234,37 +266,39 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
-  const panelRef = useRef<HTMLDivElement>(null);
-
-  // Track pointer coordinates globally so handleOpenChange can check if click was on the panel
-  useEffect(() => {
-    const handler = (e: PointerEvent) => {
-      (window as any).__lastPointerX = e.clientX;
-      (window as any).__lastPointerY = e.clientY;
-    };
-    window.addEventListener("pointerdown", handler, true);
-    return () => window.removeEventListener("pointerdown", handler, true);
-  }, []);
-
-  return createPortal(
-    <div
-      ref={panelRef}
-      data-code-preview-panel=""
-      style={{ pointerEvents: "auto" }}
-      className={cn(
-        "fixed top-0 right-0 h-full w-[420px] z-[9999] flex flex-col",
-        "border-l border-grayA-4 shadow-2xl",
-        "bg-[#f8f8f8] dark:bg-[#0a0a0a]",
-        "animate-in slide-in-from-right duration-200"
-      )}
-    >
-      {/* Header */}
-      <div className="px-5 py-4 border-b border-grayA-4">
-        <div className="text-sm font-medium text-gray-12 dark:text-white">API Equivalent</div>
-        <div className="text-xs text-gray-9 dark:text-gray-8 mt-0.5">
-          Updates live as you fill the form
+  return (
+    <div className={cn(
+      "bg-background border rounded-xl overflow-hidden drop-shadow-2xl transform-gpu shrink-0 transition-all duration-300",
+      justUpdated
+        ? "border-grass-9/40 ring-1 ring-grass-9/20"
+        : "border-grayA-4"
+    )}>
+      {/* Header: title + lang tabs + copy button */}
+      <div className="flex items-center justify-between px-4 py-2.5">
+        <div className="flex items-center gap-2">
+          {/* Live dot */}
+          <span className="relative flex size-2 shrink-0">
+            <span className={cn(
+              "absolute inline-flex size-full rounded-full bg-grass-9",
+              justUpdated ? "animate-ping" : "animate-pulse"
+            )} />
+            <span className="relative inline-flex rounded-full size-2 bg-grass-9" />
+          </span>
+          <span className="text-xs font-medium text-gray-11">API Equivalent</span>
+          {/* Updated badge */}
+          {justUpdated && (
+            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-grass-9/30 text-grass-11 dark:text-grass-9 bg-grass-9/10 animate-in fade-in zoom-in-95 duration-200">
+              Updated
+            </span>
+          )}
+          {/* Field count or static subtitle */}
+          <span className="text-[10px] text-gray-8 hidden sm:inline">
+            {fieldCount > 0
+              ? `— ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
+              : "— updates live as you fill the form"}
+          </span>
         </div>
-        <div className="flex items-center justify-between mt-3">
+        <div className="flex items-center gap-2">
           <div className="flex items-center gap-1">
             {LANGUAGES.map((l, i) => (
               <button
@@ -272,10 +306,10 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
                 type="button"
                 onClick={() => setActiveLang(i)}
                 className={cn(
-                  "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
+                  "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
                   activeLang === i
-                    ? "text-gray-12 dark:text-white bg-gray-3 dark:bg-white/10"
-                    : "text-gray-9 hover:text-gray-12 dark:hover:text-white"
+                    ? "text-gray-12 bg-gray-3"
+                    : "text-gray-9 hover:text-gray-12"
                 )}
               >
                 {l.label}
@@ -288,16 +322,16 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
             className={cn(
               "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
               copied
-                ? "bg-green-500/15 text-green-600 dark:text-green-400"
-                : "bg-gray-3 dark:bg-white/10 text-gray-11 dark:text-gray-10 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12 dark:hover:text-white"
+                ? "bg-grass-9/15 text-grass-11 dark:text-grass-9"
+                : "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
             )}
           >
             {copied ? (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path d="M3 7.5l2.5 2.5L11 4" />
               </svg>
             ) : (
-              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
                 <path d="M9.5 4.5V3a1.5 1.5 0 00-1.5-1.5H3A1.5 1.5 0 001.5 3v5A1.5 1.5 0 003 9.5h1.5" />
               </svg>
@@ -307,15 +341,15 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
         </div>
       </div>
 
-      {/* Code */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto p-5 font-mono text-xs leading-6">
+      {/* Code area */}
+      <div className="bg-[#f8f8f8] dark:bg-[#0a0a0a] overflow-x-auto overflow-y-auto max-h-[180px] px-4 py-3 font-mono text-[11px] leading-5 border-t border-grayA-3">
         <Highlight theme={activeTheme} code={code} language={lang.language}>
           {({ tokens, getLineProps, getTokenProps }) => (
             <pre>
               {tokens.map((line, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static code lines
                 <div key={i} {...getLineProps({ line })}>
-                  <span className="select-none text-gray-6 dark:text-white/20 mr-4 inline-block w-5 text-right text-[11px]">
+                  <span className="select-none text-gray-6 dark:text-white/20 mr-3 inline-block w-5 text-right text-[10px]">
                     {i + 1}
                   </span>
                   {line.map((token, key) => (
@@ -328,7 +362,6 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
           )}
         </Highlight>
       </div>
-    </div>,
-    document.body
+    </div>
   );
 }
