@@ -111,19 +111,6 @@ export const CreateKeyDialog = ({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
-      // Check if the pointer is over the code preview panel
-      const panel = document.querySelector("[data-code-preview-panel]");
-      if (panel) {
-        const rect = panel.getBoundingClientRect();
-        const x = (window as any).__lastPointerX ?? 0;
-        const y = (window as any).__lastPointerY ?? 0;
-        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
-          // Click was inside the code panel — re-open immediately
-          requestAnimationFrame(() => setIsSettingsOpen(true));
-          return;
-        }
-      }
-
       saveCurrentValues();
       setDialogKey((prev) => prev + 1);
     }
@@ -181,52 +168,57 @@ export const CreateKeyDialog = ({
             key={dialogKey}
             isOpen={isSettingsOpen}
             onOpenChange={handleOpenChange}
-            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] max-h-[90vh] sm:max-h-[90vh] md:max-h-[70vh] lg:max-h-[90vh] xl:max-h-[80vh]"
+            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[92vh] md:h-[85vh] lg:h-[88vh] xl:h-[85vh] top-[45%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
           >
-            <NavigableDialogHeader
-              title="New Key"
-              subTitle="Create a custom API key with your own settings"
-            />
-            <NavigableDialogBody>
-              <NavigableDialogNav
-                items={SECTIONS.map((section) => ({
-                  id: section.id,
-                  label: <SectionLabel label={section.label} validState={validSteps[section.id]} />,
-                  icon: section.icon,
-                }))}
-                onNavigate={handleSectionNavigation}
-                initialSelectedId="general"
+            {/* Main modal card */}
+            <div className="bg-background border border-grayA-4 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
+              <NavigableDialogHeader
+                title="New Key"
+                subTitle="Create a custom API key with your own settings"
               />
-              <NavigableDialogContent
-                items={SECTIONS.map((section) => ({
-                  id: section.id,
-                  content: section.content(),
-                }))}
-              />
-            </NavigableDialogBody>
-            <NavigableDialogFooter>
-              <div className="flex justify-center items-center w-full">
-                <div className="flex flex-col items-center justify-center w-2/3 gap-2">
-                  <Button
-                    type="submit"
-                    form="new-key-form"
-                    variant="primary"
-                    size="xlg"
-                    className="w-full rounded-lg"
-                    disabled={!formState.isValid}
-                    loading={key.isLoading}
-                  >
-                    Create new key
-                  </Button>
-                  <div className="text-xs text-gray-9">
-                    This key will be created immediately and ready-to-use right away
+              <NavigableDialogBody>
+                <NavigableDialogNav
+                  items={SECTIONS.map((section) => ({
+                    id: section.id,
+                    label: <SectionLabel label={section.label} validState={validSteps[section.id]} />,
+                    icon: section.icon,
+                  }))}
+                  onNavigate={handleSectionNavigation}
+                  initialSelectedId="general"
+                />
+                <NavigableDialogContent
+                  items={SECTIONS.map((section) => ({
+                    id: section.id,
+                    content: section.content(),
+                  }))}
+                  className="min-h-0 xl:min-h-0"
+                />
+              </NavigableDialogBody>
+              <NavigableDialogFooter>
+                <div className="flex justify-center items-center w-full">
+                  <div className="flex flex-col items-center justify-center w-2/3 gap-2">
+                    <Button
+                      type="submit"
+                      form="new-key-form"
+                      variant="primary"
+                      size="xlg"
+                      className="w-full rounded-lg"
+                      disabled={!formState.isValid}
+                      loading={key.isLoading}
+                    >
+                      Create new key
+                    </Button>
+                    <div className="text-xs text-gray-9">
+                      This key will be created immediately and ready-to-use right away
+                    </div>
                   </div>
                 </div>
-              </div>
-            </NavigableDialogFooter>
+              </NavigableDialogFooter>
+            </div>
+
+            {/* Code preview companion panel */}
+            <CodePreviewPanel apiId={apiId} />
           </NavigableDialogRoot>
-          {/* Code Preview Side Panel — inside FormProvider for useFormContext */}
-          {isSettingsOpen && <CodePreviewPanel apiId={apiId} />}
         </form>
       </FormProvider>
 
