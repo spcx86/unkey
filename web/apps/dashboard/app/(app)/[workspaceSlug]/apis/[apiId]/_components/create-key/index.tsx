@@ -169,11 +169,11 @@ export const CreateKeyDialog = ({
             key={dialogKey}
             isOpen={isSettingsOpen}
             onOpenChange={handleOpenChange}
-            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[96vh] md:h-[92vh] lg:h-[96vh] xl:h-[92vh] top-[52%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
+            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[94vh] md:h-[88vh] lg:h-[92vh] xl:h-[88vh] top-[45%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
           >
             {/* Main modal card */}
             {codeViewMode !== "full" && (
-            <div className="bg-background border border-grayA-8 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
+            <div className="bg-background border border-grayA-4 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
               <NavigableDialogHeader
                 title="New Key"
                 subTitle="Configure your key below, or copy the code equivalent to create via API"

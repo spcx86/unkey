@@ -316,8 +316,8 @@ export function CodePreviewPanel({
           )}
           <span className="text-[10px] text-gray-8 hidden sm:inline">
             {fieldCount > 0
-              ? `· your settings as SDK code · ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
-              : "· your settings as SDK code"}
+              ? `· Unkey SDK code · ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
+              : "· Unkey SDK code"}
           </span>
         </div>
         <div className="flex items-center gap-2">
