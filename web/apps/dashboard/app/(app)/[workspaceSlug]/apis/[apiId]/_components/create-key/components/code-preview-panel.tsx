@@ -284,7 +284,7 @@ export function CodePreviewPanel({
       isFull ? "flex-1 min-h-0 flex flex-col" : "shrink-0",
       justUpdated
         ? "border-grass-9/40 ring-1 ring-grass-9/20"
-        : "border-grayA-4"
+        : "border-grayA-8"
     )}>
       {/* Header: title + lang tabs + copy button */}
       <div className={cn("flex items-center justify-between px-4 py-2.5", isFull && "pr-12")}>
