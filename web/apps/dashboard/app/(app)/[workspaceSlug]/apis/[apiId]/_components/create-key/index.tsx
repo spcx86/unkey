@@ -111,8 +111,20 @@ export const CreateKeyDialog = ({
 
   const handleOpenChange = (open: boolean) => {
     if (!open) {
+      // Check if the pointer is over the code preview panel
+      const panel = document.querySelector("[data-code-preview-panel]");
+      if (panel) {
+        const rect = panel.getBoundingClientRect();
+        const x = (window as any).__lastPointerX ?? 0;
+        const y = (window as any).__lastPointerY ?? 0;
+        if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+          // Click was inside the code panel — re-open immediately
+          requestAnimationFrame(() => setIsSettingsOpen(true));
+          return;
+        }
+      }
+
       saveCurrentValues();
-      // Reset to general step when closing, so next time it opens on the first step
       setDialogKey((prev) => prev + 1);
     }
     setIsSettingsOpen(open);
@@ -169,7 +181,7 @@ export const CreateKeyDialog = ({
             key={dialogKey}
             isOpen={isSettingsOpen}
             onOpenChange={handleOpenChange}
-            dialogClassName="w-[95%] md:w-[90%] lg:w-[85%] xl:w-[80%] 2xl:w-[70%] max-w-[1300px] max-h-[90vh] sm:max-h-[90vh] md:max-h-[70vh] lg:max-h-[90vh] xl:max-h-[80vh]"
+            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] max-h-[90vh] sm:max-h-[90vh] md:max-h-[70vh] lg:max-h-[90vh] xl:max-h-[80vh]"
           >
             <NavigableDialogHeader
               title="New Key"
@@ -191,7 +203,6 @@ export const CreateKeyDialog = ({
                   content: section.content(),
                 }))}
               />
-              <CodePreviewPanel apiId={apiId} />
             </NavigableDialogBody>
             <NavigableDialogFooter>
               <div className="flex justify-center items-center w-full">
@@ -214,8 +225,11 @@ export const CreateKeyDialog = ({
               </div>
             </NavigableDialogFooter>
           </NavigableDialogRoot>
+          {/* Code Preview Side Panel — inside FormProvider for useFormContext */}
+          {isSettingsOpen && <CodePreviewPanel apiId={apiId} />}
         </form>
       </FormProvider>
+
       {/* Success Dialog */}
       <Suspense fallback={<Loading type="spinner" />}>
         <KeyCreatedSuccessDialog

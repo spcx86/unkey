@@ -2,7 +2,8 @@
 import { cn } from "@/lib/utils";
 import { useTheme } from "next-themes";
 import { Highlight, type PrismTheme } from "prism-react-renderer";
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useFormContext, useWatch } from "react-hook-form";
 import type { FormValues } from "../create-key.schema";
 
@@ -34,7 +35,7 @@ const lightTheme: PrismTheme = {
 
 // ── Shared helpers ───────────────────────────────────────────────────
 
-function commonFields(v: Partial<FormValues>, apiId: string) {
+function commonFields(v: Partial<FormValues>) {
   const fields: { key: string; value: string }[] = [];
   if (v.name) fields.push({ key: "name", value: `"${v.name}"` });
   if (v.prefix) fields.push({ key: "prefix", value: `"${v.prefix}"` });
@@ -71,7 +72,7 @@ function generateTS(v: Partial<FormValues>, apiId: string): string {
   lines.push("const { result } = await unkey.keys.create({");
   lines.push(`  apiId: "${apiId}",`);
 
-  for (const f of commonFields(v, apiId)) {
+  for (const f of commonFields(v)) {
     lines.push(`  ${f.key}: ${f.value},`);
   }
 
@@ -128,7 +129,7 @@ function generatePython(v: Partial<FormValues>, apiId: string): string {
   lines.push("result = client.keys.create_key(");
   lines.push(`    api_id="${apiId}",`);
 
-  for (const f of commonFields(v, apiId)) {
+  for (const f of commonFields(v)) {
     const pyKey = f.key.replace(/([A-Z])/g, "_$1").toLowerCase();
     lines.push(`    ${pyKey}=${f.value},`);
   }
@@ -233,24 +234,37 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
     setTimeout(() => setCopied(false), 2000);
   }, [code]);
 
-  return (
+  const panelRef = useRef<HTMLDivElement>(null);
+
+  // Track pointer coordinates globally so handleOpenChange can check if click was on the panel
+  useEffect(() => {
+    const handler = (e: PointerEvent) => {
+      (window as any).__lastPointerX = e.clientX;
+      (window as any).__lastPointerY = e.clientY;
+    };
+    window.addEventListener("pointerdown", handler, true);
+    return () => window.removeEventListener("pointerdown", handler, true);
+  }, []);
+
+  return createPortal(
     <div
+      ref={panelRef}
+      data-code-preview-panel=""
+      style={{ pointerEvents: "auto" }}
       className={cn(
-        "w-[380px] shrink-0 border-l border-grayA-4 flex flex-col overflow-hidden",
-        "bg-[#f8f8f8] dark:bg-[#0a0a0a]"
+        "fixed top-0 right-0 h-full w-[420px] z-[9999] flex flex-col",
+        "border-l border-grayA-4 shadow-2xl",
+        "bg-[#f8f8f8] dark:bg-[#0a0a0a]",
+        "animate-in slide-in-from-right duration-200"
       )}
     >
-      {/* Header with language tabs */}
-      <div className="px-4 py-3 border-b border-grayA-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-xs font-medium text-gray-11 dark:text-gray-10">API Equivalent</div>
-            <div className="text-[10px] text-gray-9 dark:text-gray-8 mt-0.5">
-              Updates live as you fill the form
-            </div>
-          </div>
+      {/* Header */}
+      <div className="px-5 py-4 border-b border-grayA-4">
+        <div className="text-sm font-medium text-gray-12 dark:text-white">API Equivalent</div>
+        <div className="text-xs text-gray-9 dark:text-gray-8 mt-0.5">
+          Updates live as you fill the form
         </div>
-        <div className="flex items-center justify-between mt-2">
+        <div className="flex items-center justify-between mt-3">
           <div className="flex items-center gap-1">
             {LANGUAGES.map((l, i) => (
               <button
@@ -258,10 +272,10 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
                 type="button"
                 onClick={() => setActiveLang(i)}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
+                  "px-2.5 py-1 rounded-md text-xs font-medium transition-colors",
                   activeLang === i
                     ? "text-gray-12 dark:text-white bg-gray-3 dark:bg-white/10"
-                    : "text-gray-9 dark:text-gray-9 hover:text-gray-12 dark:hover:text-white"
+                    : "text-gray-9 hover:text-gray-12 dark:hover:text-white"
                 )}
               >
                 {l.label}
@@ -294,14 +308,14 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
       </div>
 
       {/* Code */}
-      <div className="flex-1 overflow-y-auto overflow-x-auto p-4 font-mono text-[11px] leading-5">
+      <div className="flex-1 overflow-y-auto overflow-x-auto p-5 font-mono text-xs leading-6">
         <Highlight theme={activeTheme} code={code} language={lang.language}>
           {({ tokens, getLineProps, getTokenProps }) => (
             <pre>
               {tokens.map((line, i) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: static code lines
                 <div key={i} {...getLineProps({ line })}>
-                  <span className="select-none text-gray-6 dark:text-white/20 mr-3 inline-block w-5 text-right text-[10px]">
+                  <span className="select-none text-gray-6 dark:text-white/20 mr-4 inline-block w-5 text-right text-[11px]">
                     {i + 1}
                   </span>
                   {line.map((token, key) => (
@@ -314,6 +328,7 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
           )}
         </Highlight>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
