@@ -18,6 +18,7 @@ import {
 } from "@unkey/ui";
 import { Suspense, useEffect, useState } from "react";
 import { FormProvider, type Resolver } from "react-hook-form";
+import { CodePreviewPanel } from "./components/code-preview-panel";
 import { KeyCreatedSuccessDialog } from "./components/key-created-success-dialog";
 import { SectionLabel } from "./components/section-label";
 import { type DialogSectionName, SECTIONS } from "./create-key.constants";
@@ -168,7 +169,7 @@ export const CreateKeyDialog = ({
             key={dialogKey}
             isOpen={isSettingsOpen}
             onOpenChange={handleOpenChange}
-            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] max-h-[90vh] sm:max-h-[90vh] md:max-h-[70vh] lg:max-h-[90vh] xl:max-h-[80vh]"
+            dialogClassName="w-[95%] md:w-[90%] lg:w-[85%] xl:w-[80%] 2xl:w-[70%] max-w-[1300px] max-h-[90vh] sm:max-h-[90vh] md:max-h-[70vh] lg:max-h-[90vh] xl:max-h-[80vh]"
           >
             <NavigableDialogHeader
               title="New Key"
@@ -190,6 +191,7 @@ export const CreateKeyDialog = ({
                   content: section.content(),
                 }))}
               />
+              <CodePreviewPanel apiId={apiId} />
             </NavigableDialogBody>
             <NavigableDialogFooter>
               <div className="flex justify-center items-center w-full">
