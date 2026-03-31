@@ -169,7 +169,7 @@ export const CreateKeyDialog = ({
             key={dialogKey}
             isOpen={isSettingsOpen}
             onOpenChange={handleOpenChange}
-            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[94vh] md:h-[88vh] lg:h-[92vh] xl:h-[88vh] top-[45%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
+            dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[94vh] md:h-[88vh] lg:h-[92vh] xl:h-[88vh] top-[48%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
           >
             {/* Main modal card */}
             {codeViewMode !== "full" && (
@@ -198,7 +198,7 @@ export const CreateKeyDialog = ({
                 />
               </NavigableDialogBody>
               <NavigableDialogFooter>
-                <div className="flex justify-end items-center w-full">
+                <div className="flex justify-end items-center w-full -my-2">
                   <Button
                     type="submit"
                     form="new-key-form"
@@ -208,6 +208,7 @@ export const CreateKeyDialog = ({
                     disabled={!formState.isValid}
                     loading={key.isLoading}
                   >
+                    <Plus />
                     Create new key
                   </Button>
                 </div>
