@@ -256,7 +256,7 @@ export function CodePreviewPanel({
     }
   }, [code]);
 
-  // Count configured fields
+  // Count configured fields — matches what actually appears in the generated code
   const fieldCount = useMemo(() => {
     let count = 0;
     const v = values as Partial<FormValues>;
@@ -265,8 +265,18 @@ export function CodePreviewPanel({
     if (v.bytes && v.bytes !== 16) count++;
     if (v.externalId) count++;
     if (v.environment) count++;
-    if (hasCredits(v)) count++;
-    if (hasRatelimit(v)) count++;
+    if (hasCredits(v)) {
+      count++; // remaining
+      const refill = v.limit!.data!.refill;
+      if (refill?.interval && refill.interval !== "none") {
+        count++; // refill.interval
+        count++; // refill.amount
+        if (refill.interval === "monthly" && refill.refillDay) count++; // refill.refillDay
+      }
+    }
+    if (hasRatelimit(v)) {
+      count += v.ratelimit!.data!.length; // each ratelimit rule
+    }
     if (hasExpiration(v)) count++;
     if (hasMeta(v)) count++;
     return count;
@@ -280,11 +290,11 @@ export function CodePreviewPanel({
 
   return (
     <div className={cn(
-      "bg-background border rounded-xl overflow-hidden drop-shadow-2xl transform-gpu transition-all duration-300",
+      "bg-gray-2 dark:bg-gray-2 border rounded-xl overflow-hidden transform-gpu transition-all duration-300",
       isFull ? "flex-1 min-h-0 flex flex-col" : "shrink-0",
       justUpdated
         ? "border-grass-9/40 ring-1 ring-grass-9/20"
-        : "border-grayA-8"
+        : "border-grayA-4"
     )}>
       {/* Header: title + lang tabs + copy button */}
       <div className={cn("flex items-center justify-between px-4 py-2.5", isFull && "pr-12")}>
@@ -297,7 +307,7 @@ export function CodePreviewPanel({
             )} />
             <span className="relative inline-flex rounded-full size-2 bg-grass-9" />
           </span>
-          <span className="text-xs font-medium text-gray-11">API Equivalent</span>
+          <span className="text-xs font-medium text-gray-11">Or, create via code</span>
           {/* Updated badge */}
           {justUpdated && (
             <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-grass-9/30 text-grass-11 dark:text-grass-9 bg-grass-9/10 animate-in fade-in zoom-in-95 duration-200">
@@ -306,8 +316,8 @@ export function CodePreviewPanel({
           )}
           <span className="text-[10px] text-gray-8 hidden sm:inline">
             {fieldCount > 0
-              ? `— ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
-              : "— prefer code? Copy this snippet instead"}
+              ? `· your settings as SDK code · ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
+              : "· your settings as SDK code"}
           </span>
         </div>
         <div className="flex items-center gap-2">
