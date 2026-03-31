@@ -18,7 +18,7 @@ import {
 } from "@unkey/ui";
 import { Suspense, useEffect, useState } from "react";
 import { FormProvider, type Resolver } from "react-hook-form";
-import { CodePreviewPanel } from "./components/code-preview-panel";
+import { CodePreviewPanel, type CodeViewMode } from "./components/code-preview-panel";
 import { KeyCreatedSuccessDialog } from "./components/key-created-success-dialog";
 import { SectionLabel } from "./components/section-label";
 import { type DialogSectionName, SECTIONS } from "./create-key.constants";
@@ -52,6 +52,7 @@ export const CreateKeyDialog = ({
     name?: string;
   } | null>(null);
   const [dialogKey, setDialogKey] = useState(0);
+  const [codeViewMode, setCodeViewMode] = useState<CodeViewMode>("expanded");
 
   const methods = usePersistedForm<FormValues>(
     FORM_STORAGE_KEY,
@@ -171,10 +172,11 @@ export const CreateKeyDialog = ({
             dialogClassName="w-[90%] md:w-[70%] lg:w-[70%] xl:w-[50%] 2xl:w-[45%] max-w-[940px] h-[92vh] md:h-[85vh] lg:h-[88vh] xl:h-[85vh] top-[45%] bg-transparent border-0 shadow-none drop-shadow-none overflow-visible gap-3"
           >
             {/* Main modal card */}
+            {codeViewMode !== "full" && (
             <div className="bg-background border border-grayA-4 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
               <NavigableDialogHeader
                 title="New Key"
-                subTitle="Create a custom API key with your own settings"
+                subTitle="Configure your key below, or copy the code equivalent to create via API"
               />
               <NavigableDialogBody>
                 <NavigableDialogNav
@@ -192,32 +194,29 @@ export const CreateKeyDialog = ({
                     content: section.content(),
                   }))}
                   className="min-h-0 xl:min-h-0"
+                  showScrollFade
                 />
               </NavigableDialogBody>
               <NavigableDialogFooter>
-                <div className="flex justify-center items-center w-full">
-                  <div className="flex flex-col items-center justify-center w-2/3 gap-2">
-                    <Button
-                      type="submit"
-                      form="new-key-form"
-                      variant="primary"
-                      size="xlg"
-                      className="w-full rounded-lg"
-                      disabled={!formState.isValid}
-                      loading={key.isLoading}
-                    >
-                      Create new key
-                    </Button>
-                    <div className="text-xs text-gray-9">
-                      This key will be created immediately and ready-to-use right away
-                    </div>
-                  </div>
+                <div className="flex justify-end items-center w-full">
+                  <Button
+                    type="submit"
+                    form="new-key-form"
+                    variant="primary"
+                    size="lg"
+                    className="rounded-lg"
+                    disabled={!formState.isValid}
+                    loading={key.isLoading}
+                  >
+                    Create new key
+                  </Button>
                 </div>
               </NavigableDialogFooter>
             </div>
+            )}
 
             {/* Code preview companion panel */}
-            <CodePreviewPanel apiId={apiId} />
+            <CodePreviewPanel apiId={apiId} viewMode={codeViewMode} onViewModeChange={setCodeViewMode} />
           </NavigableDialogRoot>
         </form>
       </FormProvider>

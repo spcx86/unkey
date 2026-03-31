@@ -215,7 +215,17 @@ const LANGUAGES = [
 
 // ── Component ────────────────────────────────────────────────────────
 
-export function CodePreviewPanel({ apiId }: { apiId: string }) {
+export type CodeViewMode = "collapsed" | "expanded" | "full";
+
+export function CodePreviewPanel({
+  apiId,
+  viewMode,
+  onViewModeChange,
+}: {
+  apiId: string;
+  viewMode: CodeViewMode;
+  onViewModeChange: (mode: CodeViewMode) => void;
+}) {
   const { control } = useFormContext<FormValues>();
   const values = useWatch({ control });
   const { resolvedTheme } = useTheme();
@@ -224,6 +234,8 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
   const [activeLang, setActiveLang] = useState(0);
   const [copied, setCopied] = useState(false);
   const [justUpdated, setJustUpdated] = useState(false);
+  const expanded = viewMode !== "collapsed";
+  const isFull = viewMode === "full";
 
   const lang = LANGUAGES[activeLang];
   const code = lang.generate(values as Partial<FormValues>, apiId);
@@ -268,13 +280,14 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
 
   return (
     <div className={cn(
-      "bg-background border rounded-xl overflow-hidden drop-shadow-2xl transform-gpu shrink-0 transition-all duration-300",
+      "bg-background border rounded-xl overflow-hidden drop-shadow-2xl transform-gpu transition-all duration-300",
+      isFull ? "flex-1 min-h-0 flex flex-col" : "shrink-0",
       justUpdated
         ? "border-grass-9/40 ring-1 ring-grass-9/20"
         : "border-grayA-4"
     )}>
       {/* Header: title + lang tabs + copy button */}
-      <div className="flex items-center justify-between px-4 py-2.5">
+      <div className={cn("flex items-center justify-between px-4 py-2.5", isFull && "pr-12")}>
         <div className="flex items-center gap-2">
           {/* Live dot */}
           <span className="relative flex size-2 shrink-0">
@@ -291,58 +304,102 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
               Updated
             </span>
           )}
-          {/* Field count or static subtitle */}
           <span className="text-[10px] text-gray-8 hidden sm:inline">
             {fieldCount > 0
               ? `— ${fieldCount} field${fieldCount !== 1 ? "s" : ""} configured`
-              : "— updates live as you fill the form"}
+              : "— prefer code? Copy this snippet instead"}
           </span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1">
-            {LANGUAGES.map((l, i) => (
+          {expanded && (
+            <>
+              <div className="flex items-center gap-1">
+                {LANGUAGES.map((l, i) => (
+                  <button
+                    key={l.label}
+                    type="button"
+                    onClick={() => setActiveLang(i)}
+                    className={cn(
+                      "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
+                      activeLang === i
+                        ? "text-gray-12 bg-gray-3"
+                        : "text-gray-9 hover:text-gray-12"
+                    )}
+                  >
+                    {l.label}
+                  </button>
+                ))}
+              </div>
               <button
-                key={l.label}
                 type="button"
-                onClick={() => setActiveLang(i)}
+                onClick={handleCopy}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[10px] font-medium transition-colors",
-                  activeLang === i
-                    ? "text-gray-12 bg-gray-3"
-                    : "text-gray-9 hover:text-gray-12"
+                  "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+                  copied
+                    ? "bg-grass-9/15 text-grass-11 dark:text-grass-9"
+                    : "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
                 )}
               >
-                {l.label}
+                {copied ? (
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <path d="M3 7.5l2.5 2.5L11 4" />
+                  </svg>
+                ) : (
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                    <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
+                    <path d="M9.5 4.5V3a1.5 1.5 0 00-1.5-1.5H3A1.5 1.5 0 001.5 3v5A1.5 1.5 0 003 9.5h1.5" />
+                  </svg>
+                )}
+                {copied ? "Copied!" : "Copy Code"}
               </button>
-            ))}
-          </div>
+            </>
+          )}
+          {/* Expand/collapse toggle */}
+          {expanded && (
+            <button
+              type="button"
+              onClick={() => onViewModeChange(isFull ? "expanded" : "full")}
+              className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-gray-9 hover:text-gray-12 hover:bg-gray-3 transition-colors"
+              title={isFull ? "Minimize code" : "Expand code"}
+            >
+              {isFull ? (
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M9 1v4h4M5 13V9H1M9 5L13 1M5 9l-4 4" />
+                </svg>
+              ) : (
+                <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                  <path d="M13 5V1h-4M1 9v4h4M13 1L9 5M1 13l4-4" />
+                </svg>
+              )}
+            </button>
+          )}
           <button
             type="button"
-            onClick={handleCopy}
-            className={cn(
-              "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
-              copied
-                ? "bg-grass-9/15 text-grass-11 dark:text-grass-9"
-                : "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
-            )}
+            onClick={() => onViewModeChange(expanded ? "collapsed" : "expanded")}
+            className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[11px] font-medium text-gray-9 hover:text-gray-12 hover:bg-gray-3 transition-colors"
           >
-            {copied ? (
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <path d="M3 7.5l2.5 2.5L11 4" />
-              </svg>
-            ) : (
-              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
-                <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
-                <path d="M9.5 4.5V3a1.5 1.5 0 00-1.5-1.5H3A1.5 1.5 0 001.5 3v5A1.5 1.5 0 003 9.5h1.5" />
-              </svg>
-            )}
-            {copied ? "Copied!" : "Copy Code"}
+            <svg
+              width="12"
+              height="12"
+              viewBox="0 0 14 14"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="1.5"
+              className={cn("transition-transform duration-200", expanded && "rotate-180")}
+            >
+              <path d="M3 5l4 4 4-4" />
+            </svg>
+            {expanded ? "Hide" : "Show"}
           </button>
         </div>
       </div>
 
       {/* Code area */}
-      <div className="bg-[#f8f8f8] dark:bg-[#0a0a0a] overflow-x-auto overflow-y-auto max-h-[180px] px-4 py-3 font-mono text-[11px] leading-5 border-t border-grayA-3">
+      {expanded && (
+      <div className={cn(
+        "bg-[#f8f8f8] dark:bg-[#0a0a0a] overflow-x-auto overflow-y-auto px-4 py-3 font-mono text-[11px] leading-5 border-t border-grayA-3",
+        isFull ? "flex-1 min-h-0" : "max-h-[180px]"
+      )}>
         <Highlight theme={activeTheme} code={code} language={lang.language}>
           {({ tokens, getLineProps, getTokenProps }) => (
             <pre>
@@ -362,6 +419,7 @@ export function CodePreviewPanel({ apiId }: { apiId: string }) {
           )}
         </Highlight>
       </div>
+      )}
     </div>
   );
 }
