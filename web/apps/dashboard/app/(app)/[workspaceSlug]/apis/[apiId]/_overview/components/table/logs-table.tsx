@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { RowSelectionState, SortingState } from "@tanstack/react-table";
 import type { KeysOverviewLog } from "@unkey/clickhouse/src/keys/keys";
 import { DataTable, type DataTableConfig, EmptyApiRequests } from "@unkey/ui";
+import { useTheme } from "next-themes";
 import { Highlight, type PrismTheme } from "prism-react-renderer";
 import { useCallback, useMemo, useState } from "react";
 
@@ -27,10 +28,9 @@ type Props = {
   log: KeysOverviewLog | null;
   setSelectedLog: (data: KeysOverviewLog | null) => void;
   apiId: string;
-  hasKeys?: boolean;
 };
 
-export const KeysOverviewLogsTable = ({ apiId, setSelectedLog, log: selectedLog, hasKeys = true }: Props) => {
+export const KeysOverviewLogsTable = ({ apiId, setSelectedLog, log: selectedLog }: Props) => {
   const { sorts, setSorts } = useSort<SortFields>();
   const { historicalLogs, isLoading, hasMore } = useKeysOverviewLogsQuery({ apiId });
 
@@ -100,7 +100,7 @@ export const KeysOverviewLogsTable = ({ apiId, setSelectedLog, log: selectedLog,
 
 // ── Syntax highlighting theme (matches marketing site) ──────────────
 
-const editorTheme: PrismTheme = {
+const darkEditorTheme: PrismTheme = {
   plain: { color: "#F8F8F2", backgroundColor: "transparent" },
   styles: [
     { types: ["keyword", "builtin"], style: { color: "#9D72FF" } },
@@ -110,6 +110,19 @@ const editorTheme: PrismTheme = {
     { types: ["number"], style: { color: "#FB3186" } },
     { types: ["comment"], style: { color: "#4D4D4D" } },
     { types: ["operator", "punctuation"], style: { color: "#888" } },
+  ],
+};
+
+const lightEditorTheme: PrismTheme = {
+  plain: { color: "#1a1a1a", backgroundColor: "transparent" },
+  styles: [
+    { types: ["keyword", "builtin"], style: { color: "#7c3aed" } },
+    { types: ["function"], style: { color: "#db2777" } },
+    { types: ["string"], style: { color: "#059669" } },
+    { types: ["string-property", "property"], style: { color: "#7c3aed" } },
+    { types: ["number"], style: { color: "#db2777" } },
+    { types: ["comment"], style: { color: "#9ca3af" } },
+    { types: ["operator", "punctuation"], style: { color: "#6b7280" } },
   ],
 };
 
@@ -261,6 +274,9 @@ fmt.Println(result.Key)`,
 export function NoKeysEmptyState({ apiId }: { apiId: string }) {
   const [activeTab, setActiveTab] = useState(0);
   const [activeFramework, setActiveFramework] = useState(0);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
+  const activeTheme = isDark ? darkEditorTheme : lightEditorTheme;
   const tab = CODE_TABS[activeTab];
   const frameworks = tab.frameworks;
   const framework = frameworks[activeFramework];
@@ -280,9 +296,9 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           Use the Unkey SDK or API to create and manage keys programmatically.
         </p>
       </div>
-      <div className="w-full overflow-hidden">
+      <div className="w-full overflow-hidden rounded-lg border border-gray-3 dark:border-[#2a2a2a]">
         {/* Language tabs */}
-        <div className="flex items-end gap-1">
+        <div className="flex items-end gap-0 bg-[#f2f2f2] dark:bg-[#111] px-2 pt-2">
           {CODE_TABS.map((t, i) => {
             const Icon = t.icon;
             return (
@@ -292,8 +308,8 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
                 className={cn(
                   "inline-flex items-center gap-1.5 justify-center whitespace-nowrap rounded-t-lg px-3 py-1.5 text-xs font-light transition-all border border-b-0",
                   activeTab === i
-                    ? "text-accent-12 bg-gradient-to-t from-gray-1 to-gray-3 border-gray-6"
-                    : "text-accent-9 hover:text-accent-11 bg-gray-1 border-gray-4"
+                    ? "text-gray-12 dark:text-white bg-[#f8f8f8] dark:bg-[#0a0a0a] border-gray-3 dark:border-[#2a2a2a]"
+                    : "text-gray-8 hover:text-gray-11 dark:text-white/30 dark:hover:text-white/60 bg-transparent border-transparent"
                 )}
               >
                 <Icon active={activeTab === i} />
@@ -303,10 +319,10 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           })}
         </div>
         {/* Code block with optional framework sidebar */}
-        <div className="rounded-b-lg rounded-tr-lg border border-gray-6 bg-[#0a0a0a] flex overflow-hidden">
+        <div className="bg-[#f8f8f8] dark:bg-[#0a0a0a] flex overflow-hidden">
           {/* Framework sidebar — only show when there are multiple */}
           {frameworks.length > 1 && (
-            <div className="flex flex-col border-r border-gray-6 py-2 min-w-[100px]">
+            <div className="flex flex-col border-r border-gray-3 dark:border-[#2a2a2a] py-2 min-w-[100px]">
               {frameworks.map((fw, i) => (
                 <button
                   key={fw.name}
@@ -314,8 +330,8 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
                   className={cn(
                     "text-left px-3 py-1.5 text-xs transition-colors",
                     activeFramework === i
-                      ? "text-accent-12 bg-white/5"
-                      : "text-accent-9 hover:text-accent-11"
+                      ? "text-gray-12 bg-black/5 dark:text-white dark:bg-white/5"
+                      : "text-gray-8 hover:text-gray-11 dark:text-white/30 dark:hover:text-white/60"
                   )}
                 >
                   {fw.name}
@@ -325,13 +341,13 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           )}
           {/* Code */}
           <div className="flex-1 p-4 font-mono text-xs overflow-x-auto">
-            <Highlight theme={editorTheme} code={framework.code(apiId)} language={tab.language}>
+            <Highlight theme={activeTheme} code={framework.code(apiId)} language={tab.language}>
               {({ tokens, getLineProps, getTokenProps }) => (
                 <pre className="leading-6">
                   {tokens.map((line, i) => (
                     // biome-ignore lint/suspicious/noArrayIndexKey: static code lines
                     <div key={i} {...getLineProps({ line })}>
-                      <span className="select-none text-gray-7 mr-4 inline-block w-4 text-right text-[10px]">{i + 1}</span>
+                      <span className="select-none text-gray-6 dark:text-white/20 mr-4 inline-block w-4 text-right text-[10px]">{i + 1}</span>
                       {line.map((token, key) => (
                         // biome-ignore lint/suspicious/noArrayIndexKey: static tokens
                         <span key={key} {...getTokenProps({ token })} />
