@@ -9,7 +9,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@unkey/ui";
+import { cn } from "@unkey/ui/src/lib/utils";
 import { FormDescription } from "@unkey/ui/src/components/form/form-helpers";
+import { useCallback, useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import type { CreditsFormValues } from "../create-key.schema";
 
@@ -36,6 +38,16 @@ export const UsageSetup = ({
     control,
     name: "limit.data.refill.interval",
   });
+
+  const switchRef = useRef<HTMLDivElement>(null);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const highlightSwitch = useCallback(() => {
+    if (limitEnabled) return;
+    switchRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setIsPulsing(false);
+    requestAnimationFrame(() => setIsPulsing(true));
+  }, [limitEnabled]);
 
   const handleSwitchChange = (checked: boolean) => {
     setValue("limit.enabled", checked);
@@ -105,15 +117,28 @@ export const UsageSetup = ({
     <div className="flex flex-col gap-y-5 px-2 py-1">
       {!overrideEnabled && (
         <ProtectionSwitch
+          ref={switchRef}
           description="Turn on to limit how many times this key can be used. Once the limit
             is reached, the key will be disabled."
           title="Credits"
           icon={<ChartPie className="text-gray-12" iconSize="sm-regular" />}
           checked={limitEnabled}
           onCheckedChange={handleSwitchChange}
+          highlightSwitch={isPulsing}
+          onHighlightEnd={() => setIsPulsing(false)}
           {...register("limit.enabled")}
         />
       )}
+
+      <div className={cn("flex flex-col gap-y-5 transition-opacity duration-200 relative", !limitEnabled && "opacity-40")}>
+        {/* Invisible overlay to capture clicks on disabled fields */}
+        {!limitEnabled && (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click on disabled area is a hint, not primary interaction
+          <div
+            className="absolute inset-0 z-10 cursor-not-allowed"
+            onClick={highlightSwitch}
+          />
+        )}
 
       <FormInput
         className="[&_input:first-of-type]:h-[36px]"
@@ -221,6 +246,7 @@ export const UsageSetup = ({
           />
         )}
       />
+      </div>
     </div>
   );
 };

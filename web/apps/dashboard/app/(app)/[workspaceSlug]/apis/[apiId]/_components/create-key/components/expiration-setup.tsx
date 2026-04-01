@@ -3,8 +3,9 @@ import { ProtectionSwitch } from "@/components/dashboard/metadata/protection-swi
 import { DatetimePopover } from "@/components/logs/datetime/datetime-popover";
 import { Clock } from "@unkey/icons";
 import { FormInput } from "@unkey/ui";
+import { cn } from "@unkey/ui/src/lib/utils";
 import { addDays, addMinutes, format } from "date-fns";
-import { useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { Controller, useFormContext, useWatch } from "react-hook-form";
 import type { ExpirationFormValues } from "../create-key.schema";
 
@@ -62,6 +63,16 @@ export const ExpirationSetup = ({
     control,
     name: "expiration.data",
   });
+
+  const switchRef = useRef<HTMLDivElement>(null);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const highlightSwitch = useCallback(() => {
+    if (expirationEnabled) return;
+    switchRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setIsPulsing(false);
+    requestAnimationFrame(() => setIsPulsing(true));
+  }, [expirationEnabled]);
 
   const handleSwitchChange = (checked: boolean) => {
     setValue("expiration.enabled", checked);
@@ -146,14 +157,26 @@ export const ExpirationSetup = ({
     <div className="flex flex-col gap-y-5 px-2 py-1">
       {!overrideEnabled && (
         <ProtectionSwitch
+          ref={switchRef}
           description="Turn on to set an expiration date. When reached, the key will be automatically disabled."
           title="Expiration"
           icon={<Clock className="text-gray-12" iconSize="sm-regular" />}
           checked={expirationEnabled}
           onCheckedChange={handleSwitchChange}
+          highlightSwitch={isPulsing}
+          onHighlightEnd={() => setIsPulsing(false)}
           {...register("expiration.enabled")}
         />
       )}
+
+      <div className={cn("flex flex-col gap-y-5 transition-opacity duration-200 relative", !expirationEnabled && "opacity-40")}>
+        {!expirationEnabled && (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click on disabled area is a hint, not primary interaction
+          <div
+            className="absolute inset-0 z-10 cursor-not-allowed"
+            onClick={highlightSwitch}
+          />
+        )}
 
       <Controller
         control={control}
@@ -186,6 +209,7 @@ export const ExpirationSetup = ({
           </DatetimePopover>
         )}
       />
+      </div>
     </div>
   );
 };
