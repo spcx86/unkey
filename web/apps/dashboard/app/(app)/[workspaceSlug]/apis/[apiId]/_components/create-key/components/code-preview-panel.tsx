@@ -302,10 +302,10 @@ export function CodePreviewPanel({
           {/* Live dot */}
           <span className="relative flex size-2 shrink-0">
             <span className={cn(
-              "absolute inline-flex size-full rounded-full bg-grass-9",
-              justUpdated ? "animate-ping" : "animate-pulse"
+              "absolute inline-flex size-full rounded-full",
+              justUpdated ? "bg-grass-9 animate-ping" : "bg-[hsla(191,100%,39%,1)] animate-pulse"
             )} />
-            <span className="relative inline-flex rounded-full size-2 bg-grass-9" />
+            <span className={cn("relative inline-flex rounded-full size-2", justUpdated ? "bg-grass-9" : "bg-[hsla(191,100%,39%,1)]")} />
           </span>
           <span className="text-xs font-medium text-gray-11">Or, create via code</span>
           {/* Updated badge */}

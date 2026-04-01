@@ -6,7 +6,6 @@ import { usePersistedForm } from "@/hooks/use-persisted-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus } from "@unkey/icons";
 import {
-  Button,
   Loading,
   NavigableDialogBody,
   NavigableDialogContent,
@@ -199,18 +198,42 @@ export const CreateKeyDialog = ({
               </NavigableDialogBody>
               <NavigableDialogFooter>
                 <div className="flex justify-end items-center w-full -my-2">
-                  <Button
-                    type="submit"
-                    form="new-key-form"
-                    variant="primary"
-                    size="lg"
-                    className="rounded-lg"
-                    disabled={!formState.isValid}
-                    loading={key.isLoading}
-                  >
-                    <Plus />
-                    Create new key
-                  </Button>
+                  <div className="relative group/cta">
+                    <div
+                      aria-hidden
+                      className="absolute -inset-1 rounded-lg blur-xl opacity-25 group-hover/cta:opacity-60 transition duration-300"
+                      style={{ background: "hsl(185, 50%, 55%)" }}
+                    />
+                    <button
+                      type="submit"
+                      form="new-key-form"
+                      disabled={!formState.isValid || key.isLoading}
+                      className="relative flex items-center px-4 gap-2 text-sm font-semibold rounded-lg h-10 transition-all duration-200 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed text-white dark:text-black border border-white/10 dark:border-transparent overflow-hidden"
+                    >
+                      {/* Light mode: dark bg + cyan edge */}
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 dark:hidden"
+                        style={{ background: "linear-gradient(to right, hsl(185, 50%, 45%) 0%, #1a1a1a 60%)" }}
+                      />
+                      {/* Dark mode: white bg + cyan edge */}
+                      <span
+                        aria-hidden
+                        className="absolute inset-0 hidden dark:block"
+                        style={{ background: "linear-gradient(135deg, hsl(185, 50%, 70%) 0%, white 40%, white 100%)" }}
+                      />
+                      <span className="relative flex items-center gap-2">
+                        {key.isLoading ? (
+                          <Loading type="spinner" />
+                        ) : (
+                          <>
+                            <Plus className="w-4 h-4" />
+                            Create new key
+                          </>
+                        )}
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </NavigableDialogFooter>
             </div>
