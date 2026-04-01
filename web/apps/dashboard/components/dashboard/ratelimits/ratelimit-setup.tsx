@@ -4,7 +4,7 @@ import type { RatelimitFormValues, RatelimitItem } from "@/lib/schemas/ratelimit
 import { Gauge, Trash } from "@unkey/icons";
 import { Button, FormCheckbox, FormInput, InlineLink } from "@unkey/ui";
 import { cn } from "@unkey/ui/src/lib/utils";
-import { useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Controller, useFieldArray, useFormContext, useWatch } from "react-hook-form";
 
 export const RatelimitSetup = ({
@@ -63,6 +63,17 @@ export const RatelimitSetup = ({
     }
   }, [fields.length, append]);
 
+  const switchRef = useRef<HTMLDivElement>(null);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const highlightSwitch = useCallback(() => {
+    if (ratelimitEnabled) return;
+    switchRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setIsPulsing(false);
+    // Wait a tick so React removes the class, then re-add it to restart animation
+    requestAnimationFrame(() => setIsPulsing(true));
+  }, [ratelimitEnabled]);
+
   const handleSwitchChange = (checked: boolean) => {
     setValue("ratelimit.enabled", checked);
     trigger("ratelimit");
@@ -88,15 +99,29 @@ export const RatelimitSetup = ({
     <div className="flex flex-col gap-5 px-2 py-1">
       {!overrideEnabled && (
         <ProtectionSwitch
+          ref={switchRef}
           description={description}
           title="Ratelimit"
           icon={<Gauge className="text-gray-12" iconSize="sm-regular" />}
           checked={ratelimitEnabled}
           onCheckedChange={handleSwitchChange}
+          highlightSwitch={isPulsing}
+          onHighlightEnd={() => setIsPulsing(false)}
           {...register("ratelimit.enabled")}
         />
       )}
 
+      <div
+        className={cn("flex flex-col gap-5 transition-opacity duration-200 relative", !ratelimitEnabled && "opacity-40")}
+      >
+        {/* Invisible overlay to capture clicks on disabled fields */}
+        {!ratelimitEnabled && (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click on disabled area is a hint, not primary interaction
+          <div
+            className="absolute inset-0 z-10 cursor-not-allowed"
+            onClick={highlightSwitch}
+          />
+        )}
       <div className="flex w-full justify-between items-center px-1">
         <div className="flex gap-2 items-center">
           <span className="font-medium text-sm text-gray-12">Ratelimits</span>
@@ -216,6 +241,7 @@ export const RatelimitSetup = ({
             />
           </div>
         ))}
+      </div>
       </div>
     </div>
   );
