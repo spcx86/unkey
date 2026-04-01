@@ -172,7 +172,13 @@ export const CreateKeyDialog = ({
           >
             {/* Main modal card */}
             {codeViewMode !== "full" && (
-            <div className="bg-background border border-grayA-4 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
+            <div className="create-key-modal bg-background border border-grayA-4 rounded-2xl overflow-hidden flex flex-col drop-shadow-2xl transform-gpu flex-1 min-h-0">
+              <style>{`
+                .create-key-modal button[data-state=checked] {
+                  background-color: hsl(185, 50%, 55%) !important;
+                  --tw-ring-color: hsla(185, 50%, 55%, 0.3) !important;
+                }
+              `}</style>
               <NavigableDialogHeader
                 title="New Key"
                 subTitle="Configure your key below, or copy the code equivalent to create via API"

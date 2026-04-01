@@ -289,13 +289,13 @@ export function CodePreviewPanel({
   }, [code]);
 
   return (
-    <div className={cn(
-      "bg-gray-2 dark:bg-gray-2 border rounded-xl overflow-hidden transform-gpu transition-all duration-300",
-      isFull ? "flex-1 min-h-0 flex flex-col" : "shrink-0",
-      justUpdated
-        ? "border-grass-9/40 ring-1 ring-grass-9/20"
-        : "border-grayA-4"
-    )}>
+    <div
+      className={cn(
+        "bg-gray-2 dark:bg-gray-2 border rounded-xl overflow-hidden transform-gpu transition-all duration-300 border-grayA-4",
+        isFull ? "flex-1 min-h-0 flex flex-col" : "shrink-0",
+      )}
+      style={justUpdated ? { borderColor: "hsla(185, 50%, 55%, 0.4)", boxShadow: "0 0 0 1px hsla(185, 50%, 55%, 0.2)" } : undefined}
+    >
       {/* Header: title + lang tabs + copy button */}
       <div className={cn("flex items-center justify-between px-4 py-2.5", isFull && "pr-12")}>
         <div className="flex items-center gap-2">
@@ -303,14 +303,19 @@ export function CodePreviewPanel({
           <span className="relative flex size-2 shrink-0">
             <span className={cn(
               "absolute inline-flex size-full rounded-full",
-              justUpdated ? "bg-grass-9 animate-ping" : "bg-[hsla(191,100%,39%,1)] animate-pulse"
-            )} />
-            <span className={cn("relative inline-flex rounded-full size-2", justUpdated ? "bg-grass-9" : "bg-[hsla(191,100%,39%,1)]")} />
+              justUpdated ? "animate-ping" : "animate-pulse"
+            )}
+            style={{ background: "hsl(185, 50%, 55%)" }}
+            />
+            <span className="relative inline-flex rounded-full size-2" style={{ background: "hsl(185, 50%, 55%)" }} />
           </span>
           <span className="text-xs font-medium text-gray-11">Or, create via code</span>
           {/* Updated badge */}
           {justUpdated && (
-            <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full border border-grass-9/30 text-grass-11 dark:text-grass-9 bg-grass-9/10 animate-in fade-in zoom-in-95 duration-200">
+            <span
+              className="text-[10px] font-semibold px-2 py-0.5 rounded-full border animate-in fade-in zoom-in-95 duration-200"
+              style={{ borderColor: "hsla(185, 50%, 55%, 0.3)", color: "hsl(185, 50%, 55%)", background: "hsla(185, 50%, 55%, 0.1)" }}
+            >
               Updated
             </span>
           )}
@@ -345,10 +350,9 @@ export function CodePreviewPanel({
                 onClick={handleCopy}
                 className={cn(
                   "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
-                  copied
-                    ? "bg-grass-9/15 text-grass-11 dark:text-grass-9"
-                    : "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
+                  !copied && "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
                 )}
+                style={copied ? { background: "hsla(185, 50%, 55%, 0.15)", color: "hsl(185, 50%, 55%)" } : undefined}
               >
                 {copied ? (
                   <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
