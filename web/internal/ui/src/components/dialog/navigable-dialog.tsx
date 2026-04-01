@@ -102,11 +102,13 @@ const NavigableDialogRoot = <TStepName extends string>({
 const NavigableDialogHeader = ({
   title,
   subTitle,
+  titleClassName,
 }: {
   title: string;
   subTitle?: string;
+  titleClassName?: string;
 }) => {
-  return <DefaultDialogHeader title={title} subTitle={subTitle} />;
+  return <DefaultDialogHeader title={title} subTitle={subTitle} titleClassName={titleClassName} />;
 };
 
 // Footer component
