@@ -2,6 +2,8 @@
 import type { MetadataFormValues } from "@/lib/schemas/metadata";
 import { Code } from "@unkey/icons";
 import { Button, FormTextarea, toast } from "@unkey/ui";
+import { cn } from "@unkey/ui/src/lib/utils";
+import { useCallback, useRef, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { ProtectionSwitch } from "./protection-switch";
 
@@ -58,6 +60,16 @@ export const MetadataSetup = ({ overrideEnabled = false, entityType }: MetadataS
     name: "metadata.data",
   }) as string | undefined;
 
+  const switchRef = useRef<HTMLDivElement>(null);
+  const [isPulsing, setIsPulsing] = useState(false);
+
+  const highlightSwitch = useCallback(() => {
+    if (metadataEnabled) return;
+    switchRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    setIsPulsing(false);
+    requestAnimationFrame(() => setIsPulsing(true));
+  }, [metadataEnabled]);
+
   const handleSwitchChange = (checked: boolean) => {
     if (checked) {
       setValue("metadata", {
@@ -99,15 +111,25 @@ export const MetadataSetup = ({ overrideEnabled = false, entityType }: MetadataS
     <div className="flex flex-col gap-5 px-2 py-1">
       {!overrideEnabled && (
         <ProtectionSwitch
+          ref={switchRef}
           description={descriptions.switch}
           title="Metadata"
           icon={<Code className="text-gray-12" iconSize="sm-regular" />}
           checked={metadataEnabled}
           onCheckedChange={handleSwitchChange}
+          highlightSwitch={isPulsing}
+          onHighlightEnd={() => setIsPulsing(false)}
           {...register("metadata.enabled")}
         />
       )}
-      <div className="flex flex-col gap-2 h-fit duration-300">
+      <div className={cn("flex flex-col gap-2 h-fit duration-300 relative", !metadataEnabled && "opacity-40")}>
+        {!metadataEnabled && (
+          // biome-ignore lint/a11y/useKeyWithClickEvents: click on disabled area is a hint, not primary interaction
+          <div
+            className="absolute inset-0 z-10 cursor-not-allowed"
+            onClick={highlightSwitch}
+          />
+        )}
         <FormTextarea
           placeholder={JSON.stringify(EXAMPLE_JSON, null, 2)}
           label="Metadata"

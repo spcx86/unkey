@@ -1,5 +1,6 @@
 "use client";
 import { Switch } from "@/components/ui/switch";
+import { cn } from "@unkey/ui/src/lib/utils";
 import { forwardRef } from "react";
 
 type FeatureCardProps = {
@@ -8,11 +9,13 @@ type FeatureCardProps = {
   description: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  highlightSwitch?: boolean;
+  onHighlightEnd?: () => void;
   switchProps?: React.ComponentPropsWithoutRef<typeof Switch>;
 };
 
 export const ProtectionSwitch = forwardRef<HTMLDivElement, FeatureCardProps>(
-  ({ icon, title, description, checked, onCheckedChange, switchProps, ...rest }, ref) => {
+  ({ icon, title, description, checked, onCheckedChange, highlightSwitch, onHighlightEnd, switchProps, ...rest }, ref) => {
     return (
       <div
         ref={ref}
@@ -27,19 +30,21 @@ export const ProtectionSwitch = forwardRef<HTMLDivElement, FeatureCardProps>(
           <div className="text-gray-9 text-xs">{description}</div>
         </div>
         <Switch
-          className="
-        h-4 w-8
-        data-[state=checked]:bg-success-9
-        data-[state=checked]:ring-2
-        data-[state=checked]:ring-successA-5
-        data-[state=unchecked]:bg-gray-3
-        data-[state=unchecked]:ring-2
-        data-[state=unchecked]:ring-grayA-3
-        [&>span]:h-3.5 [&>span]:w-3.5
-      "
+          className={cn(
+            `h-4 w-8
+            data-[state=checked]:bg-success-9
+            data-[state=checked]:ring-2
+            data-[state=checked]:ring-successA-5
+            data-[state=unchecked]:bg-gray-6
+            data-[state=unchecked]:ring-2
+            data-[state=unchecked]:ring-grayA-6
+            [&>span]:h-3.5 [&>span]:w-3.5`,
+            highlightSwitch && "animate-pulse-highlight",
+          )}
           thumbClassName="h-[14px] w-[14px] data-[state=unchecked]:bg-grayA-9 data-[state=checked]:bg-white"
           checked={checked}
           onCheckedChange={onCheckedChange}
+          onAnimationEnd={onHighlightEnd}
           {...switchProps}
         />
       </div>
