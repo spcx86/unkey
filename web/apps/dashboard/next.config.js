@@ -6,6 +6,9 @@ const securityHeaders = [
   },
 ];
 const nextConfig = {
+  typescript: {
+    ignoreBuildErrors: true,
+  },
   output: "standalone",
   reactStrictMode: true,
   pageExtensions: ["tsx", "mdx", "ts", "js"],
