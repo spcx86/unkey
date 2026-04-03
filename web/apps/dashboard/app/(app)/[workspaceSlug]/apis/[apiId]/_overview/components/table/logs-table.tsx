@@ -175,8 +175,15 @@ const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
 
 const { result } = await unkey.keys.create({
   apiId: "${apiId}",
-  prefix: "sk_live",
-  name: "my-first-key",
+  // prefix: "sk_live",
+  // name: "my-api-key",
+  // externalId: "user_123",
+  // ratelimit: [
+  //   { name: "requests", limit: 10, duration: 60_000 }
+  // ],
+  // remaining: 1000,
+  // expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
+  // meta: { team: "backend" },
 });
 
 console.log(result.key);`,
@@ -207,8 +214,14 @@ const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
 export async function createKeyForUser(userId: string) {
   const { result } = await unkey.keys.create({
     apiId: "${apiId}",
-    prefix: "sk_live",
     externalId: userId,
+    // prefix: "sk_live",
+    // name: "user-api-key",
+    // ratelimit: [
+    //   { name: "requests", limit: 10, duration: 60_000 }
+    // ],
+    // remaining: 1000,
+    // expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
   });
 
   return result.key;
@@ -236,7 +249,13 @@ const unkey = new Unkey({ rootKey: process.env.UNKEY_ROOT_KEY });
 app.post("/keys", async (c) => {
   const { result } = await unkey.keys.create({
     apiId: "${apiId}",
-    prefix: "sk_live",
+    // prefix: "sk_live",
+    // name: "my-api-key",
+    // ratelimit: [
+    //   { name: "requests", limit: 10, duration: 60_000 }
+    // ],
+    // remaining: 1000,
+    // expires: Date.now() + 30 * 24 * 60 * 60 * 1000,
   });
 
   return c.json({ key: result.key });
@@ -270,8 +289,15 @@ client = Unkey(bearer_auth="<YOUR_ROOT_KEY>")
 
 result = client.keys.create_key(
   api_id="${apiId}",
-  prefix="sk_live",
-  name="my-first-key",
+  # prefix="sk_live",
+  # name="my-api-key",
+  # external_id="user_123",
+  # ratelimit=[
+  #   {"name": "requests", "limit": 10, "duration": 60000}
+  # ],
+  # remaining=1000,
+  # expires=int(time.time() * 1000) + 30 * 24 * 60 * 60 * 1000,
+  # meta={"team": "backend"},
 )
 
 print(result.key)`,
@@ -308,8 +334,13 @@ client := unkey.New(
 
 result, err := client.Keys.CreateKey(ctx, &operations.CreateKeyRequestBody{
   APIID:  "${apiId}",
-  Prefix: unkey.String("sk_live"),
-  Name:   unkey.String("my-first-key"),
+  // Prefix:     unkey.String("sk_live"),
+  // Name:       unkey.String("my-api-key"),
+  // ExternalID: unkey.String("user_123"),
+  // Remaining:  unkey.Int64(1000),
+  // Ratelimits: []operations.Ratelimit{
+  //   {Name: "requests", Limit: 10, Duration: 60000},
+  // },
 })
 
 fmt.Println(result.Key)`,
@@ -342,7 +373,14 @@ if result.Valid {
         code: (apiId: string) => `curl -X POST https://api.unkey.com/v2/keys.createKey \\
   -H "Authorization: Bearer <YOUR_ROOT_KEY>" \\
   -H "Content-Type: application/json" \\
-  -d '{"apiId": "${apiId}"}'`,
+  -d '{
+    "apiId": "${apiId}"
+    # "prefix": "sk_live",
+    # "name": "my-api-key",
+    # "externalId": "user_123",
+    # "ratelimit": [{"name": "requests", "limit": 10, "duration": 60000}],
+    # "remaining": 1000
+  }'`,
       },
       {
         name: "Verify Key",
@@ -360,6 +398,7 @@ if result.Valid {
 export function NoKeysEmptyState({ apiId }: { apiId: string }) {
   const [activeTab, setActiveTab] = useState(0);
   const [activeFramework, setActiveFramework] = useState(0);
+  const [copied, setCopied] = useState(false);
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === "dark";
   const activeTheme = isDark ? darkEditorTheme : lightEditorTheme;
@@ -370,6 +409,12 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
   const handleTabChange = (i: number) => {
     setActiveTab(i);
     setActiveFramework(0);
+  };
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(framework.code(apiId));
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
   };
 
   return (
@@ -405,7 +450,29 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
           })}
         </div>
         {/* Code block with optional framework sidebar */}
-        <div className="-mt-px bg-[#f8f8f8] dark:bg-[#0a0a0a] flex overflow-hidden rounded-b-lg rounded-tr-lg border border-gray-3 dark:border-[#2a2a2a]">
+        <div className="-mt-px bg-[#f8f8f8] dark:bg-[#0a0a0a] flex overflow-hidden rounded-b-lg rounded-tr-lg border border-gray-3 dark:border-[#2a2a2a] relative">
+          {/* Copy button */}
+          <button
+            type="button"
+            onClick={handleCopy}
+            className={cn(
+              "absolute top-2.5 right-2.5 z-10 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium transition-all",
+              !copied && "bg-gray-3 dark:bg-white/10 text-gray-11 hover:bg-gray-4 dark:hover:bg-white/15 hover:text-gray-12"
+            )}
+            style={copied ? { background: "hsla(185, 50%, 55%, 0.15)", color: "hsl(185, 50%, 55%)" } : undefined}
+          >
+            {copied ? (
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path d="M3 7.5l2.5 2.5L11 4" />
+              </svg>
+            ) : (
+              <svg width="12" height="12" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <rect x="4.5" y="4.5" width="7" height="7" rx="1.5" />
+                <path d="M9.5 4.5V3a1.5 1.5 0 00-1.5-1.5H3A1.5 1.5 0 001.5 3v5A1.5 1.5 0 003 9.5h1.5" />
+              </svg>
+            )}
+            {copied ? "Copied!" : "Copy Code"}
+          </button>
           {/* Framework sidebar — only show when there are multiple */}
           {frameworks.length > 1 && (
             <div className="flex flex-col py-2 min-w-[100px]">
@@ -426,7 +493,7 @@ export function NoKeysEmptyState({ apiId }: { apiId: string }) {
             </div>
           )}
           {/* Code */}
-          <div className="flex-1 p-4 font-mono text-xs overflow-x-auto">
+          <div className="flex-1 p-4 font-mono text-xs overflow-x-auto overflow-y-auto max-h-[240px]">
             <Highlight theme={activeTheme} code={framework.code(apiId)} language={tab.language}>
               {({ tokens, getLineProps, getTokenProps }) => (
                 <pre className="leading-6">
